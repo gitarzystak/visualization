@@ -69,12 +69,12 @@ def update_data(attrname, old, new):
 
     source.data = dict(x=x, y=y)
 
-for w in [offset, amplitude, phase, freq]:
+for w in [offset1, amplitude1, phase1, freq1, offset2, amplitude2, phase2, freq2]:
     w.on_change('value', update_data)
 
 
 # Set up layouts and add to document
-inputs = widgetbox(text, offset, amplitude, phase, freq)
+inputs = widgetbox(text, offset1, amplitude1, phase1, freq1, offset2, amplitude2, phase2, freq2)
 
 curdoc().add_root(row(inputs, plot, width=800))
 curdoc().title = "Sliders"
