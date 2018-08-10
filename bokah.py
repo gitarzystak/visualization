@@ -11,7 +11,8 @@ in your browser.
 import numpy as np
 
 from bokeh.io import curdoc
-from bokeh.layouts import row, widgetbox
+from os.path import dirname, join
+from bokeh.layouts import row, column, widgetbox
 from bokeh.models import ColumnDataSource, Div
 from bokeh.models.widgets import Slider, TextInput
 from bokeh.plotting import figure
