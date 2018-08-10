@@ -33,11 +33,15 @@ plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6)
 
 # Set up widgets
 text = TextInput(title="title", value='my sine wave')
-offset = Slider(title="offset", value=0.0, start=-5.0, end=5.0, step=0.1)
-amplitude = Slider(title="amplitude", value=1.0, start=-5.0, end=5.0, step=0.1)
-phase = Slider(title="phase", value=0.0, start=0.0, end=2*np.pi)
-freq = Slider(title="frequency", value=1.0, start=0.1, end=5.1, step=0.1)
+offset1 = Slider(title="offset 1", value=0.0, start=-5.0, end=5.0, step=0.1)
+amplitude1 = Slider(title="amplitude 1", value=1.0, start=-5.0, end=5.0, step=0.1)
+phase1 = Slider(title="phase 1", value=0.0, start=0.0, end=2*np.pi)
+freq1 = Slider(title="frequency 1", value=1.0, start=0.1, end=5.1, step=0.1)
 
+offset2 = Slider(title="offset 2", value=0.0, start=-5.0, end=5.0, step=0.1)
+amplitude2 = Slider(title="amplitude 2", value=1.0, start=-5.0, end=5.0, step=0.1)
+phase2 = Slider(title="phase 2", value=0.0, start=0.0, end=2*np.pi)
+freq2 = Slider(title="frequency 2", value=1.0, start=0.1, end=5.1, step=0.1)
 
 # Set up callbacks
 def update_title(attrname, old, new):
@@ -48,14 +52,20 @@ text.on_change('value', update_title)
 def update_data(attrname, old, new):
 
     # Get the current slider values
-    a = amplitude.value
-    b = offset.value
-    w = phase.value
-    k = freq.value
+    a1 = amplitude1.value
+    b1 = offset1.value
+    w1 = phase1.value
+    k1 = freq1.value
+
+    # Get the current slider values
+    a2 = amplitude2.value
+    b2 = offset2.value
+    w2 = phase2.value
+    k2 = freq2.value
 
     # Generate the new curve
     x = np.linspace(0, 4*np.pi, N)
-    y = a*np.sin(k*x + w) + b
+    y = a1*np.sin(k1*x + w1) + b1 + a2*np.sin(k2*x + w2) + b2
 
     source.data = dict(x=x, y=y)
 
