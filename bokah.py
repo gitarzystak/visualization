@@ -1,99 +1,70 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Dec 23 17:03:23 2017
 
-@author: ryan
-"""
-
-from bokeh.io import output_file, show
-from bokeh.layouts import widgetbox,column,row
-from bokeh.models.widgets import RadioGroup, Button, Dropdown, Select
-from bokeh.models import Range1d
-from bokeh.plotting import figure, curdoc
-import pandas as pd
-import pickle
-import re
+''' Present an interactive function explorer with slider widgets.
+Scrub the sliders to change the properties of the ``sin`` curve, or
+type into the title text box to update the title of the plot.
+Use the ``bokeh serve`` command to run the example by executing:
+    bokeh serve sliders.py
+at your command prompt. Then navigate to the URL
+    http://localhost:5006/sliders
+in your browser.
+'''
 import numpy as np
 
+from bokeh.io import curdoc
+from bokeh.layouts import row, widgetbox
+from bokeh.models import ColumnDataSource
+from bokeh.models.widgets import Slider, TextInput
+from bokeh.plotting import figure
 
-temp1 = pd.read_csv('Expenditures.csv')
-temp2 = pd.read_csv('Taxes.csv')
-
-temp3 = temp2[(temp2['ProvisionDesc'] == 'Cigarette Tax ($ per pack)')]
-tax = []
-for obj in temp3['ProvisionValue']:
-    try:
-        tax.append(re.findall('^\d*[0-9](|.\d*[0-9]|,\d*[0-9])?$',obj)[0])
-    except:
-        tax.append(np.nan)
-temp3['tax'] = tax
-temp3['tax'] = temp3['tax'].astype('float64')
-temp4 = temp3.groupby(['Year','LocationAbbr'])['tax'].mean().reset_index()
-df = pd.merge(
-                temp1[temp1['Variable']=='Total'],
-                temp4,
-                how='inner',
-                on=['Year','LocationAbbr']
-            )
-
-trace = pickle.load(open('trace.pkl','rb'))
-#%%
-
-p1 = figure(x_range=[2005,2009], y_range=(0,1), title='Tax Rate Per Year')
-p2 = figure(x_range=[2005,2009], y_range=(df['Data_Value'].min(),df['Data_Value'].max()),title='Expenditures on Cigarette Related Healthcare')
-p3 = figure(title='Distribution of Savings (in Millions of $) Per 1% Increase in Tax Rate per Year')
-lines = []
-lines2 = []
-hists = []
-i = 0
-line_dict = {}
-height_dict ={}
-x_start={}
-x_end = {}
-for state in df['LocationAbbr'].unique():
-    line_dict[state] = i
-    temp = df[df['LocationAbbr'] == state]
-    amt = temp.iloc[4,10]
-    hist, edges = np.histogram(np.random.choice((-trace)*amt,1000),density=True)
-    x_start[state] = edges[0]
-    x_end[state] = edges[-1]
-    height_dict[state] = np.max(hist)
-    lines.append(p1.line(temp['Year'],temp['tax']))
-    lines2.append(p2.line(temp['Year'],temp['Data_Value']))
-    hists.append(p3.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
-        fill_color="#036564", line_color="#033649"))
-    
-    i+=1
-    
-for line in lines:
-    line.glyph.line_alpha=0
-for line in lines2:
-    line.glyph.line_alpha=0
-for hist in hists:
-    hist.glyph.fill_alpha=0
-    hist.glyph.line_alpha=0
-
-menu = [(obj,str(line_dict[obj])) for obj in line_dict]
-def callback(attr, old, new):
-    p3.x_range.start=x_start[new]
-    p3.x_range.end=x_end[new]
-    p3.y_range.start=0
-    p3.y_range.end=height_dict[new]
-    lines[line_dict[old]].glyph.line_alpha=0
-    lines[line_dict[new]].glyph.line_alpha = 1
-    lines2[line_dict[old]].glyph.line_alpha=0
-    lines2[line_dict[new]].glyph.line_alpha = 1
-    hists[line_dict[old]].glyph.line_alpha=0
-    hists[line_dict[new]].glyph.line_alpha=1
-    hists[line_dict[old]].glyph.fill_alpha=0
-    hists[line_dict[new]].glyph.fill_alpha=1
-    
-    
-dropdown = Select(title="State",value='CA',options=list(df['LocationAbbr'].unique()))
+# Set up data
+N = 200
+x = np.linspace(0, 4*np.pi, N)
+y = np.sin(x)
+source = ColumnDataSource(data=dict(x=x, y=y))
 
 
-#dropdown.  
-dropdown.on_change('value',callback)
-#dropdown.on_click(callback)
-curdoc().add_root(column(dropdown,row(p1,p2),row(p3)))
+# Set up plot
+plot = figure(plot_height=400, plot_width=400, title="my sine wave",
+              tools="crosshair,pan,reset,save,wheel_zoom",
+              x_range=[0, 4*np.pi], y_range=[-2.5, 2.5])
+
+plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6)
+
+
+# Set up widgets
+text = TextInput(title="title", value='my sine wave')
+offset = Slider(title="offset", value=0.0, start=-5.0, end=5.0, step=0.1)
+amplitude = Slider(title="amplitude", value=1.0, start=-5.0, end=5.0, step=0.1)
+phase = Slider(title="phase", value=0.0, start=0.0, end=2*np.pi)
+freq = Slider(title="frequency", value=1.0, start=0.1, end=5.1, step=0.1)
+
+
+# Set up callbacks
+def update_title(attrname, old, new):
+    plot.title.text = text.value
+
+text.on_change('value', update_title)
+
+def update_data(attrname, old, new):
+
+    # Get the current slider values
+    a = amplitude.value
+    b = offset.value
+    w = phase.value
+    k = freq.value
+
+    # Generate the new curve
+    x = np.linspace(0, 4*np.pi, N)
+    y = a*np.sin(k*x + w) + b
+
+    source.data = dict(x=x, y=y)
+
+for w in [offset, amplitude, phase, freq]:
+    w.on_change('value', update_data)
+
+
+# Set up layouts and add to document
+inputs = widgetbox(text, offset, amplitude, phase, freq)
+
+curdoc().add_root(row(inputs, plot, width=800))
+curdoc().title = "Sliders"
