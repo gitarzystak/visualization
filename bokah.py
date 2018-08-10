@@ -12,7 +12,7 @@ import numpy as np
 
 from bokeh.io import curdoc
 from bokeh.layouts import row, widgetbox
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, Div
 from bokeh.models.widgets import Slider, TextInput
 from bokeh.plotting import figure
 
@@ -24,6 +24,8 @@ source = ColumnDataSource(data=dict(x=x, y=y))
 source1 = ColumnDataSource(data=dict(x=x, y=y))
 source2 = ColumnDataSource(data=dict(x=x, y=y))
 
+#Description
+desc = Div(text=open(join(dirname(__file__), "description.html")).read(), width=800)
 
 # Set up plot
 plot = figure(plot_height=400, plot_width=400, title="Interferencja 1D",
@@ -43,6 +45,18 @@ plot2 = figure(plot_height=400, plot_width=400, title="Fala 2",
               x_range=[0, 4*np.pi], y_range=[-2.5, 2.5])
 
 plot2.line('x', 'y', source=source2, line_width=3, line_alpha=0.6)
+
+# change the axes labels
+xlabel="X"
+ylabel="E"
+plot.xaxis.axis_label = xlabel
+plot1.xaxis.axis_label = xlabel
+plot2.xaxis.axis_label = xlabel
+
+plot.yaxis.axis_label = ylabel
+plot1.yaxis.axis_label = ylabel
+plot2.yaxis.axis_label = ylabel
+
 
 # Set up widgets
 #text = TextInput(title="title", value='my sine wave')
@@ -93,5 +107,6 @@ for w in [offset1, amplitude1, phase1, freq1, offset2, amplitude2, phase2, freq2
 #inputs = widgetbox(text, offset1, amplitude1, phase1, freq1, offset2, amplitude2, phase2, freq2)
 inputs = widgetbox(offset1, amplitude1, phase1, freq1, offset2, amplitude2, phase2, freq2)
 
-curdoc().add_root(row(inputs, plot1, plot2, plot, width=800))
+curdoc().add_root(column(desc,row(inputs, plot1, plot2, plot, width=800)))
+#curdoc().add_root(row(inputs, plot1, plot2, plot, width=800))
 curdoc().title = "Interferencja 1D"
